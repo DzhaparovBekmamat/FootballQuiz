@@ -1,5 +1,6 @@
 package com.template.footballquiz.fragments
 
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
@@ -19,14 +20,14 @@ import com.template.footballquiz.model.Constants
 import com.template.footballquiz.model.Question
 
 class GameFragment : Fragment(), View.OnClickListener {
-    lateinit var binding: FragmentGameBinding
+    private lateinit var binding: FragmentGameBinding
     private lateinit var mQuestionsList: ArrayList<Question>
     private var mSelectedPosition: Int = 0
     private var mCorrectAnswer: Int = 0
-    var mCurrrentPosition: Int = 1
+    private var mCurrrentPosition: Int = 1
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_game, container, false)
         mQuestionsList = Constants.getQuestion()
         Log.i("info", mCurrrentPosition.toString())
@@ -39,6 +40,7 @@ class GameFragment : Fragment(), View.OnClickListener {
         return binding.root
     }
 
+    @SuppressLint("SetTextI18n")
     private fun setQuestion() {
         val question: Question = mQuestionsList[mCurrrentPosition - 1]
         binding.tvQuestion.text = question.question
@@ -48,8 +50,7 @@ class GameFragment : Fragment(), View.OnClickListener {
         binding.tvOptionThree.text = question.optionThree
         binding.tvOptionFour.text = question.optionFour
         binding.pb.progress = mCurrrentPosition
-        binding.tvProgress.text =
-            "$mCurrrentPosition" + "/" + binding.pb.max
+        binding.tvProgress.text = "$mCurrrentPosition" + "/" + binding.pb.max
         defaultAppearance()
         if (mCurrrentPosition == mQuestionsList.size) {
             binding.btnSubmit.text = "Quiz Finished"
@@ -72,6 +73,7 @@ class GameFragment : Fragment(), View.OnClickListener {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.tv_optionOne -> {
