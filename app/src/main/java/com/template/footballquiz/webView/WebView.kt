@@ -9,6 +9,7 @@ import android.webkit.CookieManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.fragment.app.Fragment
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.template.footballquiz.R
 
 class WebViewFragment : Fragment() {
@@ -18,6 +19,7 @@ class WebViewFragment : Fragment() {
     }
 
     private lateinit var webView: WebView
+    private lateinit var remoteConfig: FirebaseRemoteConfig
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -28,8 +30,16 @@ class WebViewFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         webView = view.findViewById(R.id.webView)
-        val webUrl = arguments?.getString(KEY_WEB_URL) ?: DEFAULT_WEB_URL
+        remoteConfig = FirebaseRemoteConfig.getInstance()
+
+        val webUrl = arguments?.getString(KEY_WEB_URL) ?: getRemoteUrl()
         setupWebView(webUrl)
+    }
+
+    private fun getRemoteUrl(): String {
+        // Fetch the URL from Firebase Remote Config
+        val remoteUrl = remoteConfig.getString(KEY_WEB_URL)
+        return remoteUrl.takeIf { it.isNotEmpty() } ?: DEFAULT_WEB_URL
     }
 
     @SuppressLint("SetJavaScriptEnabled")

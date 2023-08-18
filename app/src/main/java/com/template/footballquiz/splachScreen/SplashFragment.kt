@@ -10,10 +10,15 @@ import androidx.fragment.app.Fragment
 import com.template.footballquiz.R
 import com.template.footballquiz.webView.WebViewFragment
 import com.template.footballquiz.fragments.GameFragment
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.android.gms.tasks.Task
+import androidx.annotation.NonNull
 
-@Suppress("DEPRECATION")
 class SplashFragment : Fragment() {
     private val delayMillis: Long = 2000
+    private lateinit var remoteConfig: FirebaseRemoteConfig
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -23,32 +28,42 @@ class SplashFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Initialize Firebase Remote Config
+        remoteConfig = FirebaseRemoteConfig.getInstance()
+        val configSettings = FirebaseRemoteConfigSettings.Builder()
+            .setMinimumFetchIntervalInSeconds(3600)
+            .build()
+        remoteConfig.setConfigSettingsAsync(configSettings)
+
+        remoteConfig.fetchAndActivate().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val remoteUrl = remoteConfig.getString("url")
+                handleNavigation(remoteUrl)
+            }
+        }
+    }
+
+    private fun handleNavigation(url: String) {
         Handler().postDelayed({
-            if (shouldShowWebView()) {
+            val fragment = if (shouldShowWebView() && url.isNotEmpty()) {
                 val webFragment = WebViewFragment()
                 val bundle = Bundle()
-                bundle.putString(WebViewFragment.KEY_WEB_URL, getLocalLink())
+                bundle.putString(WebViewFragment.KEY_WEB_URL, url)
                 webFragment.arguments = bundle
-                parentFragmentManager.beginTransaction()
-                    .replace(R.id.webView, webFragment)
-                    .commit()
+                webFragment
             } else {
-                val gameFragment = GameFragment()
-                parentFragmentManager.beginTransaction()
-                    .replace(R.id.gameFragment, gameFragment)
-                    .commit()
+                GameFragment()
             }
+
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.myNavHostFragment, fragment)
+                .commit()
         }, delayMillis)
     }
 
     private fun shouldShowWebView(): Boolean {
-        val localLink = getLocalLink()
-        val isEmulator = isEmulator()
-        return localLink.isNotEmpty() && !isEmulator
-    }
-
-    private fun getLocalLink(): String {
-        return "https://www.example.com"
+        return !isEmulator()
     }
 
     private fun isEmulator(): Boolean {
